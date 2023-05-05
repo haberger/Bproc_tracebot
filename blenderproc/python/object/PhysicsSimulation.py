@@ -13,7 +13,8 @@ def simulate_physics_and_fix_final_poses(min_simulation_time: float = 4.0, max_s
                                          check_object_interval: float = 2.0,
                                          object_stopped_location_threshold: float = 0.01,
                                          object_stopped_rotation_threshold: float = 0.1, substeps_per_frame: int = 10,
-                                         solver_iters: int = 10, verbose: bool = False):
+                                         solver_iters: int = 10, verbose: bool = False, 
+                                         origin_mode:str = "CENTER_OF_VOLUME"):
     """ Simulates the current scene and in the end fixes the final poses of all active objects.
 
     The simulation is run for at least `min_simulation_time` seconds and at a maximum `max_simulation_time` seconds.
@@ -43,7 +44,7 @@ def simulate_physics_and_fix_final_poses(min_simulation_time: float = 4.0, max_s
         obj_poses_before_sim = _PhysicsSimulation.get_pose()
         origin_shifts = simulate_physics(min_simulation_time, max_simulation_time, check_object_interval,
                                          object_stopped_location_threshold, object_stopped_rotation_threshold,
-                                         substeps_per_frame, solver_iters, verbose)
+                                         substeps_per_frame, solver_iters, verbose, origin_mode)
         obj_poses_after_sim = _PhysicsSimulation.get_pose()
 
         # Make sure to remove the simulation cache as we are only interested in the final poses
@@ -76,7 +77,8 @@ def simulate_physics_and_fix_final_poses(min_simulation_time: float = 4.0, max_s
 def simulate_physics(min_simulation_time: float = 4.0, max_simulation_time: float = 40.0,
                      check_object_interval: float = 2.0, object_stopped_location_threshold: float = 0.01,
                      object_stopped_rotation_threshold: float = 0.1, substeps_per_frame: int = 10,
-                     solver_iters: int = 10, verbose: bool = False) -> dict:
+                     solver_iters: int = 10, verbose: bool = False,
+                     origin_mode: str = "CENTER_OF_VOLUME") -> dict:
     """ Simulates the current scene.
 
     The simulation is run for at least `min_simulation_time` seconds and at a maximum `max_simulation_time` seconds.
@@ -107,7 +109,7 @@ def simulate_physics(min_simulation_time: float = 4.0, max_simulation_time: floa
     for obj in get_all_mesh_objects():
         if obj.has_rigidbody_enabled():
             prev_origin = obj.get_origin()
-            new_origin = obj.set_origin(mode="CENTER_OF_VOLUME")
+            new_origin = obj.set_origin(mode=origin_mode)
             origin_shift[obj.get_name()] = new_origin - prev_origin
 
             # Persist mesh scaling as having a scale != 1 can make the simulation unstable
